@@ -1,0 +1,443 @@
+<html>
+<head>
+	<title>
+	</title>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<style type="text/css">
+	*{
+		margin:0px;
+		padding: 0px;
+	}
+	div{
+		
+	}
+body{
+	/*min-width: 350px;
+	min-height: 200px;*/
+}
+
+div.container{
+	height:300px;
+	width:400px;
+	/*box-sizing: border-box;*/
+	border-radius:0px;
+	position:fixed;
+	left:700px;
+	top:200px;
+	z-index:2;
+	background-color: #f6f6f6;
+	border:solid #a6f 3px;
+
+}
+
+div.dragArea{
+	text-align: center;
+	height:80px;
+	width:200px;
+	position:relative;
+	left:0px; right:0px; top:30px;
+	margin:0 auto 0 auto;
+	background-color: #ef4;
+	border:0px;
+}
+.goast_border{
+	height:300px;
+	width:400px;
+	border-radius:0px;
+	border: 3px solid #ccc;
+	
+	/*margin: 3px solid #ccc;*/
+	position:fixed;
+	left:700px;
+	top:200px;
+	visibility: hidden;
+	z-index: -1;
+	/*box-sizing: border-box;*/
+}
+#goast_dragArea{
+	visibility: hidden;
+	position:relative;
+	background-color: rgba(255,225,225,0.4);
+	border: 0px;
+	margin:0 auto;
+}	
+.ctrlBar-r{
+	width: 10px;
+	height: 100%;
+	border: 0px;
+	background-color: transparent;
+	position: absolute;
+	right:-5px; top:0px;
+	cursor: ew-resize;
+
+}
+
+.ctrlBar-b{
+	height: 10px;
+	width: 100%;
+	border: 0px;
+	background-color: transparent;
+	position: absolute;
+	bottom:-5px; left:0px;
+	cursor:ns-resize;
+}
+.ctrlBar-br{
+	height: 0px;
+	width: 0px;
+	border: 0px;
+	background-color: transparent;
+	border:5px transparent solid;
+	border-bottom-color: grey;
+	border-right-color: grey;
+	position: absolute;
+	bottom:0px; right:0px;
+	cursor:nwse-resize;
+}
+#ctrl{
+	position: relative;
+	height: 50px;
+	width: 100px;
+	border:1px solid transparent;
+	/*margin: 5px auto;*/
+	padding: 5px 5px;
+	box-sizing: border-box;
+}
+#ctrl>span{
+	/*margin: 2px;*/
+	float: left;
+	margin: 2px 5px;
+	display: inline-block;
+	/*height: 40px;*/
+	width: 120px;
+	padding: 4px 8px;
+	font-family: 楷体;
+	border:1px solid #4af;
+	font-size: 20px;
+	color:#4af;
+}
+#ctrl>span:hover{
+	color:#fff;
+	border:1px solid #4af;
+	background-color: rgba(80,160,255,0.5);
+	cursor: pointer;
+}
+
+	</style>
+
+</head>
+
+<body>
+<div id="ctrl">
+	<span id="animation" value="show">取消动画</span>
+	<span id="synchro" value="show">取消同步缩放</span>
+	<span id="goast" value="show">取消鬼影</span>
+	<span id="delay" value="show">即时resize</span>
+
+</div>
+<div class="container" id="dragBox" onselectstart="return false;">
+	<div class="goast_border" id="goast_border1" ondragstart="return false;">   
+		<div class="dragArea" id="goast_dragArea" ondragstart="return false;"></div>   
+	</div>
+	<div class="dragArea" id="dragArea" ondragstart="return false;"></div>
+	<div class="ctrlBar-r ctr_Bar" 	ondragstart="return false;"></div>
+	<div class="ctrlBar-b ctr_Bar" ondragstart="return false;"></div>
+	<div class="ctrlBar-br ctr_Bar" ondragstart="return false;"></div>
+	
+</div> 
+
+
+
+
+
+<script>
+//
+window.onload=function(event){
+	var test1=document.getElementById("test");
+	var dragArea=document.getElementById("dragArea");
+	var dragBox=document.getElementById("dragBox");
+	var e_goast_border=document.getElementById("goast_border1");
+	var e_goast_dragArea=document.getElementById("goast_dragArea");
+	var eRsizCtr=document.getElementsByClassName('ctr_Bar'); //console.log(eRsizCtr)
+
+	var e_animation=document.getElementById("animation");
+	var e_synchro=document.getElementById("synchro");
+	var e_goast=document.getElementById("goast");
+	var e_delay=document.getElementById("delay");
+
+	var bAnimate="show",bSyncho="show",bGoast="show",bDelay="show";
+
+
+	var i,iMinBoxH=120,iMinBoxW=300;
+	fSetPositon(dragBox,700,200);
+	fSetPositon(e_goast_border,700,200);
+
+	function boxMove(e,clickedX,clickedY,aDragBox){		
+		var iNewXofC=e.clientX-clickedX;
+		var iNewYofC= e.clientY-clickedY;
+		fSetPositon(aDragBox,iNewXofC,iNewYofC)
+		//console.log("- newXofC :"+ newXofC );
+	}
+
+	var e_animation_click=new fCreateClick(e_animation,"显示动画","取消动画",bAnimate)
+	var e_synchro_click=new fCreateClick(e_synchro,"开启同步缩放","取消同步缩放",bSyncho)
+	var e_goast_click=new fCreateClick(e_goast,"显示鬼影","取消鬼影",bGoast)
+	var e_delay_click=new fCreateClick(e_delay,"延迟resize","即时resize",bDelay)
+	function fCreateClick(Aelement,AsHideTxt,AsShowTxt,AbFlag){
+		var sel=this;
+		this.val=Aelement.getAttribute("value");
+		Aelement.onclick=function(){
+				var bCurrent=this.getAttribute("value")
+			if(bCurrent=="show"){
+				//AbFlag="hide";
+				sel.val="hide";
+				this.setAttribute("value","hide")
+				this.innerHTML=AsHideTxt;
+			}else if(bCurrent=="hide"){
+				//console.log("changing")
+				//AbFlag="show";
+				sel.val="show";
+				this.setAttribute("value","show")
+				this.innerHTML=AsShowTxt;
+			} 
+			fResetPost()
+
+			console.log("AbFlag",AbFlag)
+		}
+		
+
+	}
+
+	dragArea.onmousedown=function(e){ //拖动框体
+		console.log("onmousedown")
+		var iOldx=e.clientX;
+		var iOldy=e.clientY;
+		//dragBox.style.left=x;
+		var origXofC=dragBox.offsetLeft;
+		var origYofC=dragBox.offsetTop;
+		var shiftX=iOldx-origXofC;
+		var shiftY=iOldy-origYofC;
+				//console.log("- x :"+ x, "-origXofC:"+ origXofC );
+				document.onmousemove=function(event){
+					//e_goast_border.style.display="block"
+				boxMove(event,shiftX,shiftY,dragBox)			
+				boxMove(event,shiftX,shiftY,e_goast_border)			
+				/*newXofC=event.clientX-shiftX;
+				newYofC= event.clientY-shiftY;
+				dragBox.style.left=newXofC;
+				dragBox.style.top=newYofC;
+				console.log("- newXofC :"+ newXofC );*/
+					};
+
+		//dragArea.onmousemove=function(e){};
+		document.onmouseup=function(){
+
+			e_goast_border.style.visibility="hidden"
+			document.onmousemove=null;
+			document.onmouseup=null;
+		}
+	}
+	function fSetPositon(aDragBox,ANewXofC,ANewYofC){  //设置指定元素位置
+		var iMaxH=document.body.clientHeight-aDragBox.offsetHeight;  //console.log(iMaxH)
+		var iMaxW=document.body.clientWidth-aDragBox.offsetWidth; // console.log(iMaxW)		
+		ANewXofC=ANewXofC<iMaxW?ANewXofC:iMaxW;
+		ANewYofC=ANewYofC<iMaxH?ANewYofC:iMaxH;
+		ANewXofC=ANewXofC>0?ANewXofC:0;
+		ANewYofC=ANewYofC>0?ANewYofC:0;
+		aDragBox.style.left=ANewXofC;
+		aDragBox.style.top=ANewYofC; 
+	}
+	window.onresize=function(){
+		fSetPositon(dragBox,700,200);
+		fSetPositon(e_goast_border,700,200);
+
+	}
+	function fResetPost(){
+		var aDefault_goast=[
+			{"eFollow":goast_dragArea,"rH":8/30,"rW":0.5}
+		]
+		var aDefault_drag=[
+			{"eFollow":dragArea,"rH":8/30,"rW":0.5}
+		]
+		fSetPositon(dragBox,700,200);
+		fSetPositon(e_goast_border,700,200);
+		fSetSize(e_goast_border,"br",400,300,false,"0s",aDefault_goast)
+		fSetSize(dragBox,"br",400,300,false,"0s",aDefault_drag) 
+	}
+	function fGetRszType(AClassName,AFrom,ATo){		 // return resize 类型:  r  b  rb
+		var sType="",iIndex1,iIndex2;
+		iIndex1=(AClassName).search(AFrom)
+		iIndex2=(AClassName).search(ATo)
+		sType=AClassName.slice(iIndex1+1,iIndex2); //console.log("sType:"+sType)
+		return sType; 
+	}
+
+	var aSycroRszBox=[],aSycroRszGoast=[];
+	fSetDisplay(e_goast_border,'0s',"hidden")
+	for (i = eRsizCtr.length - 1; i >= 0; i--) {		//绑定事件
+		eRsizCtr[i].onmousedown=function(e){
+		//	console.log("bAnimate",bAnimate,e_animation_click.getValue)
+		
+		console.log("e_goast_click.getValue:",e_goast_click.val)
+			if(e_goast_click.val=="show"){
+				fSetDisplay(e_goast_border,0,"visible",2)//显示目标size
+				fSetDisplay(e_goast_dragArea,0,"visible",2)//显示目标size
+			}		
+
+			if((e_synchro_click.val)=="show"){
+				aSycroRszBox=fGetRatioObj([dragArea],dragBox) // 获取同步缩放 比例 对象数组
+				aSycroRszGoast=fGetRatioObj([e_goast_dragArea],e_goast_border) // 获取同步缩放 比例 对象数组
+				console.log("aSycroRszGoast:",aSycroRszGoast)
+				console.log("aSycroRszBox:",aSycroRszBox)
+			}else if((e_synchro_click.val)=="hide"){
+				aSycroRszBox=[],aSycroRszGoast=[];
+			}
+			var sTypeRsz=fGetRszType(this.className,"-"," ")  //获得调整方向
+
+			document.onmouseup=function(e){	 //未移动解绑
+				document.onmousemove=null;
+				document.onmouseup=null;
+				fSetDisplay(e_goast_border,"0s","hidden",-1)		
+				fSetDisplay(e_goast_dragArea,"0s","hidden",-1)		
+				return 0;
+			}
+			document.onmousemove=function(e){
+				var iAnimateDuration=(e_animation_click.val=="show")?500:0; //动画时长 mm
+				var ratio=dragBox.clientHeight/dragBox.clientWidth;  //console.log("ratio"+ratio)
+				e = e || window.event
+					var iNewX,iNewY;
+					iNewX=e.clientX,iNewY=e.clientY; //console.log("iNewX:"+iNewX," iNewY:"+iNewY)
+					var origX=dragBox.offsetLeft;
+					var origY=dragBox.offsetTop;
+					var iNewWidth=iNewX-origX;
+					var iNewHeight=iNewY-origY;
+					//fSetSize(dragBox,sTypeRsz,iNewWidth,iNewHeight,false,"0s",aSycroRszBox)	 //不带动画	setsize
+					//set 目标size框体大小
+					fSetSize(e_goast_border,sTypeRsz,iNewWidth,iNewHeight,false,"0s",aSycroRszGoast)
+					if(e_delay_click.val=="hide"){
+
+						fSetSize(dragBox,sTypeRsz,iNewWidth,iNewHeight,false,iAnimateDuration/1000+"s",aSycroRszBox) 
+					}
+				document.onmouseup=function(e){				
+					if(e_delay_click.val=="show"){
+						fSetSize(dragBox,sTypeRsz,iNewWidth,iNewHeight,false,iAnimateDuration/1000+"s",aSycroRszBox)  
+					}
+					document.onmouseup=null;
+					document.onmousemove=null;
+					//e_goast_border.style.zIndex="1"
+					fSetDisplay(e_goast_border,iAnimateDuration,"hidden",-1)  //设置goast延迟消失
+					fSetDisplay(e_goast_dragArea,iAnimateDuration,"hidden",-1)  //设置goast延迟消失
+					return 0;
+					//fSetDisplay(e_goast_dragArea,iAnimateDuration,"hidden")
+					//self.onmousedown=null;
+				}
+			}
+
+			//console.log(iIndex1,iIndex2,sType,this.className)
+		}
+	}
+	//
+	/* @@ 设置大小函数 
+		AfRarioLock锁定纵横比（default false,传入纵横比） 
+		AtAnimate 动画 （default 0s,传入动画秒数） 
+		AaFollow 同步缩放（同步缩放的对象组成的数组）
+	*/
+	function fSetSize(Ae,AType,ANewWidth,ANewHeight,AfRarioLock,AtAnimate,AaFollow){	//set size
+		if(AtAnimate==undefined){
+			AtAnimate="0s";
+		}
+		if(AaFollow==undefined||AaFollow.length===0){
+			AaFollow=[];
+		}
+		var iFollow_Len=AaFollow.length;
+		var iOrigW=Ae.clientWidth,iOrigH=Ae.clientHeight; 
+		var iMaxH=document.body.clientHeight-Ae.offsetTop;  //console.log(dragBox.offsetTop)
+		var iMaxW=document.body.clientWidth-Ae.offsetLeft;  //console.log(iMaxW)	
+		if(AfRarioLock==undefined){
+			AfRarioLock=false;
+		}else if(AfRarioLock){
+			if(iMaxW*AfRarioLock>iMaxH){
+				iMaxW=iMaxH/AfRarioLock;
+			}else{iMaxH=iMaxW*AfRarioLock}			
+			//console.log("orig ANewHeight:"+ANewHeight)
+			ANewHeight=AfRarioLock?ANewWidth*AfRarioLock:ANewHeight;
+			//console.log("new ANewHeight:"+ANewHeight)
+			//console.log(Ae+"AfRarioLock:"+AfRarioLock+AfRarioLock)
+		}
+		fSetAnimation(Ae,AtAnimate); //设置动画duration
+		ANewWidth=ANewWidth>iMinBoxW?ANewWidth:iMinBoxW;    //根据窗口尺寸调整大小
+		ANewWidth=ANewWidth<iMaxW?ANewWidth:iMaxW;
+		ANewHeight=ANewHeight>iMinBoxH?ANewHeight:iMinBoxH;
+		ANewHeight=ANewHeight<iMaxH?ANewHeight:iMaxH;
+		AType=AfRarioLock?"br":AType
+		//***缩放比例 
+		//console.log(Ae.className+"iOrig"+iOrigW+" "+iOrigH) 
+		//console.log(Ae.className+"ANewW:"+ANewWidth+" "+ANewHeight) 
+						//var fRatioW=ANewWidth/iOrigW,fRatioH=ANewHeight/iOrigH; 
+						//console.log(Ae.className+"RatioW"+fRatioW+" "+fRatioH) 
+		switch(AType){	//根据类型改变尺寸
+			case "r":
+				Ae.style.width=ANewWidth; //console.log(Ae.style.width)
+				fRszByRatio(AaFollow,ANewWidth,0) // iOrigW,iOrigH
+			break;
+			case "b":
+				Ae.style.height=ANewHeight
+				fRszByRatio(AaFollow,0,ANewHeight)
+			break;
+			case "br":
+				Ae.style.width=ANewWidth
+				Ae.style.height=ANewHeight
+				fRszByRatio(AaFollow,ANewWidth,ANewHeight);
+			break;
+			default:
+			alert(AType+"is illegal")
+			break;	
+		}
+
+	}
+	function fSetAnimation(Ae,ADuration){ //设置动画时间
+		Ae.style.transition="width "+ADuration+",height "+ADuration
+	}
+	function fSetDisplay(Ae,ADelay,AValue,AValue2){   //@@ 设置对象，延迟时间（毫秒），设置值(visible,hidden)
+	
+		setTimeout(function(){
+			Ae.style.visibility=AValue; 
+			if(AValue2!==undefined)Ae.style.zIndex=AValue2; 
+
+		},ADelay)
+
+		//Ae.style.zIndex=AValue
+	}
+	function fRszByRatio(AaFollow,ANewWidth,ANewHeight){  //@@  如不改变size 比例参数填 1
+		for (i = AaFollow.length - 1; i >= 0; i--) {
+			if(ANewHeight)AaFollow[i].eFollow.style.height=ANewHeight*AaFollow[i].rH
+			if(ANewWidth)AaFollow[i].eFollow.style.width=ANewWidth*AaFollow[i].rW
+			//console.log(AaFollow[i].className+"clientWidth:"+AaFollow[i].clientWidth)
+		}
+	}
+	function fGetRatioObj(AaFollow,AMain){
+		var objArrFollow=[],ratioW,ratioH,oNewObj;
+		for (i=0;i<AaFollow.length;i++){
+			ratioW=AaFollow[i].clientWidth/AMain.clientWidth;
+			console.log("ratioW",AaFollow[i].clientWidth,AMain.clientWidth)
+			//console.log(AMain)
+			//console.log(ratioW,AaFollow[i].height,AMain.style.width)
+			ratioH=AaFollow[i].clientHeight/AMain.clientHeight;
+			oNewObj={
+				"eFollow":AaFollow[i],
+				"rW":ratioW,
+				"rH":ratioH
+			}
+			objArrFollow.push(oNewObj)
+		}
+		// console.log(AMain.className)
+		console.log(objArrFollow)
+		return objArrFollow;
+	}
+
+}();
+
+</script>
+
+</body>
+
+</html>
